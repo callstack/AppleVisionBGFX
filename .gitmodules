@@ -1,0 +1,9 @@
+[submodule "AppleVisionBGFX/lib/bx"]
+	path = AppleVisionBGFX/lib/bx
+	url = git@github.com:callstack/bx.git
+[submodule "AppleVisionBGFX/lib/bimg"]
+	path = AppleVisionBGFX/lib/bimg
+	url = https://github.com/bkaradzic/bimg.git
+[submodule "AppleVisionBGFX/lib/bgfx"]
+	path = AppleVisionBGFX/lib/bgfx
+	url = git@github.com:callstack/bgfx.git

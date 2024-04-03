@@ -1,7 +1,3 @@
-//
-//  App.swift
-//
-
 import SwiftUI
 import CompositorServices
 
