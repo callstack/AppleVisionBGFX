@@ -4087,6 +4087,8 @@
 		769BAADF2BBD4CAD008C8639 /* image_encode.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = image_encode.cpp; sourceTree = "<group>"; };
 		769BAAE02BBD4CAD008C8639 /* image_cubemap_filter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = image_cubemap_filter.cpp; sourceTree = "<group>"; };
 		769BAAE12BBD4CAD008C8639 /* bimg_p.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bimg_p.h; sourceTree = "<group>"; };
+		769BB83C2BBD679D008C8639 /* module.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = module.modulemap; sourceTree = "<group>"; };
+		769BB83F2BBEA9EC008C8639 /* module.map */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = module.map; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -4301,6 +4303,7 @@
 				769B9B4D2BBD4C9A008C8639 /* bgfx.h */,
 				769B9B4E2BBD4C9A008C8639 /* embedded_shader.h */,
 				769B9B4F2BBD4C9A008C8639 /* platform.h */,
+				769BB83C2BBD679D008C8639 /* module.modulemap */,
 			);
 			path = bgfx;
 			sourceTree = "<group>";
@@ -9234,6 +9237,7 @@
 				769BA9A02BBD4CAC008C8639 /* ringbuffer.h */,
 				769BA9A12BBD4CAC008C8639 /* pixelformat.h */,
 				769BA9A22BBD4CAC008C8639 /* string.h */,
+				769BB83F2BBEA9EC008C8639 /* module.map */,
 			);
 			path = bx;
 			sourceTree = "<group>";
@@ -10349,6 +10353,7 @@
 				SUPPORTED_PLATFORMS = "xros xrsimulator";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = AppleVisionBGFX/ShaderTypes.h;
+				SWIFT_OBJC_INTEROP_MODE = objcxx;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
 			};
@@ -10384,6 +10389,7 @@
 				SUPPORTED_PLATFORMS = "xros xrsimulator";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = AppleVisionBGFX/ShaderTypes.h;
+				SWIFT_OBJC_INTEROP_MODE = objcxx;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
 			};
