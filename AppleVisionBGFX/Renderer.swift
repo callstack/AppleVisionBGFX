@@ -25,8 +25,7 @@ extension LayerRenderer.Clock.Instant.Duration {
 }
 
 class Renderer {
-
-    public let device: MTLDevice
+    public let device: MTLDevice                // mario: this comes from the `layerRenderer.device`
     let commandQueue: MTLCommandQueue
     var dynamicUniformBuffer: MTLBuffer
     var pipelineState: MTLRenderPipelineState
@@ -48,12 +47,24 @@ class Renderer {
     let arSession: ARKitSession
     let worldTracking: WorldTrackingProvider
     let layerRenderer: LayerRenderer
+    var bgfxAdapter: BgfxAdapter
     
     init(_ layerRenderer: LayerRenderer) {
         self.layerRenderer = layerRenderer
+        
+        bgfxAdapter = BgfxAdapter(layerRenderer)
+        
+        // RendererContextMtl::init() uses MTLDevice passed via g_platformData.context; If NULL then MTLCreateSystemDefaultDevice() is called - docs claim its available on iOS, tvOS and visiosOS!
         self.device = layerRenderer.device
+        /* // But following way of getting the MTLDevice was also working on visionOS! I've tested it myself!
+        guard let device = MTLCreateSystemDefaultDevice() else {
+            fatalError("MTLCreateSystemDefaultDevice failed on visionOS")
+        }
+        self.device = device*/
         self.commandQueue = self.device.makeCommandQueue()!
 
+
+        // --- Create the uniform buffer
         let uniformBufferSize = alignedUniformsSize * maxBuffersInFlight
 
         self.dynamicUniformBuffer = self.device.makeBuffer(length:uniformBufferSize,
@@ -63,8 +74,13 @@ class Renderer {
 
         uniforms = UnsafeMutableRawPointer(dynamicUniformBuffer.contents()).bindMemory(to:UniformsArray.self, capacity:1)
 
+        
+        // --- create vertex descriptor (ala Vertex Array Object, describing the layout of data in vertex buffers)
         let mtlVertexDescriptor = Renderer.buildMetalVertexDescriptor()
 
+        
+        // --- create the render pipeline (needs device, vertex descriptor and layer renderer)
+        // Why it needs the instance of LayerRenderer for? For Render Target Attachment Formats and for VIEW COUNT (for Vertex Amplification)
         do {
             pipelineState = try Renderer.buildRenderPipelineWithDevice(device: device,
                                                                        layerRenderer: layerRenderer,
@@ -73,11 +89,13 @@ class Renderer {
             fatalError("Unable to compile render pipeline state.  Error info: \(error)")
         }
 
+        // --- Create the Depth Stencil state
         let depthStateDescriptor = MTLDepthStencilDescriptor()
         depthStateDescriptor.depthCompareFunction = MTLCompareFunction.greater
         depthStateDescriptor.isDepthWriteEnabled = true
         self.depthState = device.makeDepthStencilState(descriptor:depthStateDescriptor)!
 
+        // --- create the mesh and texture
         do {
             mesh = try Renderer.buildMesh(device: device, mtlVertexDescriptor: mtlVertexDescriptor)
         } catch {
@@ -140,20 +158,34 @@ class Renderer {
                                              mtlVertexDescriptor: MTLVertexDescriptor) throws -> MTLRenderPipelineState {
         /// Build a render state pipeline object
 
+        // mario: all Metal source files (ending in .metal) are compiled by XCode into a single "default library"
+        //        Apple docs call "MTLLibrary" "A collection of Metal shader functions."
+        //        it can be compiled during build or at runtime from a text string.
         let library = device.makeDefaultLibrary()
 
+        // mario: grab the vertex and fragment shaders
         let vertexFunction = library?.makeFunction(name: "vertexShader")
         let fragmentFunction = library?.makeFunction(name: "fragmentShader")
 
+        // mario: create the render pipeline descriptor (like Pipeline State Object)
         let pipelineDescriptor = MTLRenderPipelineDescriptor()
         pipelineDescriptor.label = "RenderPipeline"
         pipelineDescriptor.vertexFunction = vertexFunction
         pipelineDescriptor.fragmentFunction = fragmentFunction
         pipelineDescriptor.vertexDescriptor = mtlVertexDescriptor
 
+        // mario: this includes render target attachment formats!
+        //        ----> THIS IS WHY WE NEED TO PASS THE LayerRenderer OBJECT!
         pipelineDescriptor.colorAttachments[0].pixelFormat = layerRenderer.configuration.colorFormat
         pipelineDescriptor.depthAttachmentPixelFormat = layerRenderer.configuration.depthFormat
 
+        // mario: ... but also for the viewCount (which can be configured, depending on the layer configuration)
+        //
+        // mario: Vertex Amplification -> "Run draw commands that render to different outputs using the same vertex data multiple times."
+        //        we can encode drawing commands that process the same vertex multiple times, one per render target.
+        //        It generates copies of a command's vertex data for each render pipeline.
+        //        ----> VERTEX AMPLIFICATION is more efficent than encoding the command multiple times with the same vertex because the GPU fetcches the vertex data only once!
+        //        ----> e.g. VA can be used to implement CSM with amplification multiplier that's equal to the number of cascade levels!
         pipelineDescriptor.maxVertexAmplificationCount = layerRenderer.properties.viewCount
         
         return try device.makeRenderPipelineState(descriptor: pipelineDescriptor)
@@ -247,6 +279,9 @@ class Renderer {
     func renderFrame() {
         /// Per frame updates hare
 
+        // mario: A Frame provides the Metal textures and information you need to render one of those images (provides Drawable type).
+        // mario: A frame has two phases: update phase and encode (or "submission") phase. BGFX should be concerned only about the latter.
+        // mario: LayerRenderer.Drawable.View tells where to draw our content in the provided textures.
         guard let frame = layerRenderer.queryNextFrame() else { return }
         
         frame.startUpdate()
@@ -263,6 +298,10 @@ class Renderer {
             fatalError("Failed to create command buffer")
         }
         
+        // mario: TODO: We should make this available from BGFX's `swapChain->currentDrawableTexture()` function.
+        //        currently this function uses `m_metalLayer.nextDrawable` (which in our case is not available?)...
+        //        ---> (?) unless `m_drawableTexture` is set to anything but NULL?
+        //        the CAMetalLayer holds a small pool of drawables (just like Layer renderer), each wrapped in CAMetalDrawable
         guard let drawable = frame.queryDrawable() else { return }
         
         _ = inFlightSemaphore.wait(timeout: DispatchTime.distantFuture)
@@ -283,6 +322,7 @@ class Renderer {
         
         self.updateGameState(drawable: drawable, deviceAnchor: deviceAnchor)
         
+        // mario: some of this renderPassDescriptor filling code is in RendererContextMtl::setFrameBuffer()
         let renderPassDescriptor = MTLRenderPassDescriptor()
         renderPassDescriptor.colorAttachments[0].texture = drawable.colorTextures[0]
         renderPassDescriptor.colorAttachments[0].loadAction = .clear
@@ -362,17 +402,20 @@ class Renderer {
         frame.endSubmission()
     }
     
-    func renderLoop() {
+    func renderLoop() { // mario: call `self.renderFrame()` if the `layerRender.state` allows it
         while true {
             if layerRenderer.state == .invalidated {
                 print("Layer is invalidated")
+                bgfxAdapter.shutdown()
                 return
             } else if layerRenderer.state == .paused {
                 layerRenderer.waitUntilRunning()
                 continue
             } else {
                 autoreleasepool {
-                    self.renderFrame()
+                    bgfxAdapter.initialize()
+                    // self.renderFrame()
+                    bgfxAdapter.render()
                 }
             }
         }

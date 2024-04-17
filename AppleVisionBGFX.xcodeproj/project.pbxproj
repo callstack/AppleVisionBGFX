@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		760EC0472BBC4258008E46FD /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 760EC0462BBC4258008E46FD /* Shaders.metal */; };
+		763C45D42BCFC0500034E996 /* BgfxAdapter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 763C45D22BCFC0500034E996 /* BgfxAdapter.cpp */; };
+		763C45D52BCFC0500034E996 /* BgfxRenderer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 763C45D32BCFC0500034E996 /* BgfxRenderer.mm */; };
 		769BB6832BBD4D29008C8639 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 760EC04C2BBC425A008E46FD /* Assets.xcassets */; };
 		769BB6842BBD4D29008C8639 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 760EC04A2BBC4258008E46FD /* Preview Assets.xcassets */; };
 		769BB6852BBD4DFD008C8639 /* AppleVisionBGFXApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 760EC0402BBC4258008E46FD /* AppleVisionBGFXApp.swift */; };
@@ -279,6 +281,9 @@
 		760EC04A2BBC4258008E46FD /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		760EC04C2BBC425A008E46FD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		760EC04E2BBC425A008E46FD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		763C45D12BCFC0500034E996 /* BgfxAdapter.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = BgfxAdapter.hpp; sourceTree = "<group>"; };
+		763C45D22BCFC0500034E996 /* BgfxAdapter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BgfxAdapter.cpp; sourceTree = "<group>"; };
+		763C45D32BCFC0500034E996 /* BgfxRenderer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = BgfxRenderer.mm; sourceTree = "<group>"; };
 		769B9B172BBD4C9A008C8639 /* shaderc_pssl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = shaderc_pssl.cpp; sourceTree = "<group>"; };
 		769B9B182BBD4C9A008C8639 /* shaderc_hlsl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = shaderc_hlsl.cpp; sourceTree = "<group>"; };
 		769B9B192BBD4C9A008C8639 /* shaderc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = shaderc.cpp; sourceTree = "<group>"; };
@@ -4121,6 +4126,9 @@
 		760EC03B2BBC4258008E46FD /* AppleVisionBGFX */ = {
 			isa = PBXGroup;
 			children = (
+				763C45D22BCFC0500034E996 /* BgfxAdapter.cpp */,
+				763C45D12BCFC0500034E996 /* BgfxAdapter.hpp */,
+				763C45D32BCFC0500034E996 /* BgfxRenderer.mm */,
 				769B9B132BBD4C9A008C8639 /* lib */,
 				760EC0402BBC4258008E46FD /* AppleVisionBGFXApp.swift */,
 				760EC0422BBC4258008E46FD /* ContentView.swift */,
@@ -10025,6 +10033,7 @@
 				769BB7EA2BBD51E1008C8639 /* defsgnuclinux.h in Sources */,
 				769BB7EB2BBD51E1008C8639 /* array.inl in Sources */,
 				769BB7EC2BBD51E1008C8639 /* nvcore.h in Sources */,
+				763C45D42BCFC0500034E996 /* BgfxAdapter.cpp in Sources */,
 				769BB7ED2BBD51E1008C8639 /* stdstream.h in Sources */,
 				769BB7EE2BBD51E1008C8639 /* stream.h in Sources */,
 				769BB7EF2BBD51E1008C8639 /* defsgnucdarwin.h in Sources */,
@@ -10105,6 +10114,7 @@
 				769BB6DB2BBD4E52008C8639 /* url.cpp in Sources */,
 				769BB6DC2BBD4E52008C8639 /* string.cpp in Sources */,
 				769BB6DD2BBD4E52008C8639 /* easing.cpp in Sources */,
+				763C45D52BCFC0500034E996 /* BgfxRenderer.mm in Sources */,
 				769BB6DF2BBD4E52008C8639 /* sort.cpp in Sources */,
 				769BB6E02BBD4E52008C8639 /* filepath.cpp in Sources */,
 				769BB6E12BBD4E52008C8639 /* file.cpp in Sources */,
@@ -10323,6 +10333,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_OBJC_ARC = NO;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"AppleVisionBGFX/Preview Content\"";
@@ -10348,6 +10359,10 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-lc++",
+					"-v",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.okwasniewski.AppleVisionBGFX;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "xros xrsimulator";
@@ -10364,10 +10379,12 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_OBJC_ARC = NO;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"AppleVisionBGFX/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = (
 					$SRCROOT/AppleVisionBGFX/lib/bx/include,
@@ -10384,6 +10401,10 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-lc++",
+					"-v",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.okwasniewski.AppleVisionBGFX;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "xros xrsimulator";

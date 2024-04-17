@@ -13,6 +13,7 @@
 typedef metal::int32_t EnumBackingType;
 #else
 #import <Foundation/Foundation.h>
+#include "BgfxAdapter.hpp"
 typedef NSInteger EnumBackingType;
 #endif
 
